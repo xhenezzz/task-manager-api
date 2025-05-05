@@ -60,7 +60,7 @@ json
 {
   "title": "string",
   "description": "string",
-  "due_date": "Date",
+  "dueDate": "Date",
   "status": "IN_PROGRESS", // или другой статус {TODO, DONE}
   "priority": "HIGH" // или "MEDIUM", "LOW"
 }
