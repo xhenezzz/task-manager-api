@@ -1,13 +1,17 @@
 package aidyn.kelbetov.service;
 
 import aidyn.kelbetov.DTO.TaskDto;
+import aidyn.kelbetov.model.Priority;
 import aidyn.kelbetov.model.Status;
 import aidyn.kelbetov.model.Task;
 import aidyn.kelbetov.repository.TaskRepository;
+import aidyn.kelbetov.utils.TaskSpecification;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -74,5 +78,10 @@ public class TaskService {
 
         task.setStatus(status);
         return taskRepository.save(task);
+    }
+
+    public List<Task> filetTasks(Long userId, Status status, Priority priority, Date dueDate){
+        Specification<Task> spec = TaskSpecification.byFilters(status, priority, dueDate, userId);
+        return taskRepository.findAll(spec);
     }
 }

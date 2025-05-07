@@ -1,4 +1,4 @@
-package aidyn.kelbetov.service;
+package aidyn.kelbetov.utils;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

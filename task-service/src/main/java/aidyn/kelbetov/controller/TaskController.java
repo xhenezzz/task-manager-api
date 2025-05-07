@@ -2,13 +2,17 @@ package aidyn.kelbetov.controller;
 
 import aidyn.kelbetov.DTO.StatusUpdateDto;
 import aidyn.kelbetov.DTO.TaskDto;
+import aidyn.kelbetov.model.Priority;
+import aidyn.kelbetov.model.Status;
 import aidyn.kelbetov.model.Task;
-import aidyn.kelbetov.service.JwtUtils;
+import aidyn.kelbetov.utils.JwtUtils;
 import aidyn.kelbetov.service.TaskService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -69,5 +73,18 @@ public class TaskController {
 
         Task updatedTask = taskService.editTaskStatus(taskId, statusDto.getStatus(), userId);
         return ResponseEntity.ok(updatedTask);
+    }
+
+    @GetMapping("/filter")
+    public ResponseEntity<List<Task>> filterTask(
+            @RequestParam(required = false)Status status,
+            @RequestParam(required = false)Priority priority,
+            @RequestParam(required = false)@DateTimeFormat(iso = DateTimeFormat.ISO.DATE)Date dueDate,
+            @RequestHeader("Authorization") String authHeader){
+        String token = authHeader.replace("Bearer", "").trim();
+        Long userId = jwtUtils.extractUserId(token);
+
+        List<Task> tasks = taskService.filetTasks(userId, status, priority, dueDate);
+        return ResponseEntity.ok(tasks);
     }
 }
