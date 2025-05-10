@@ -1,6 +1,8 @@
 package aidyn.kelbetov.service;
 
 import aidyn.kelbetov.DTO.TaskDto;
+import aidyn.kelbetov.DTO.TaskEventDto;
+import aidyn.kelbetov.kafka.KafkaPublisher;
 import aidyn.kelbetov.model.Priority;
 import aidyn.kelbetov.model.Status;
 import aidyn.kelbetov.model.Task;
@@ -11,15 +13,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 
 @Service
 public class TaskService {
     private final TaskRepository taskRepository;
+    private final KafkaPublisher kafkaPublisher;
 
-    public TaskService(TaskRepository taskRepository) {
+    public TaskService(TaskRepository taskRepository, KafkaPublisher kafkaPublisher) {
         this.taskRepository = taskRepository;
+        this.kafkaPublisher = kafkaPublisher;
     }
 
     public Task createTask(TaskDto taskDto, Long userId){
@@ -30,6 +36,11 @@ public class TaskService {
         task.setPriority(taskDto.getPriority());
         task.setDueDate(taskDto.getDueDate());
         task.setUserId(userId);
+
+        if (task.getDueDate() != null && isDeadlineTomorrow(task.getDueDate())) {
+            kafkaPublisher.sendMessage(new TaskEventDto(task.getTitle(), userId, task.getDueDate()));
+        }
+
         return taskRepository.save(task);
     }
 
@@ -83,5 +94,11 @@ public class TaskService {
     public List<Task> filetTasks(Long userId, Status status, Priority priority, Date dueDate){
         Specification<Task> spec = TaskSpecification.byFilters(status, priority, dueDate, userId);
         return taskRepository.findAll(spec);
+    }
+
+    private boolean isDeadlineTomorrow(Date dueDate) {
+        LocalDate due = dueDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate tomorrow = LocalDate.now().plusDays(1);
+        return due.equals(tomorrow);
     }
 }
